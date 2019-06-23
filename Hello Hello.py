@@ -20,6 +20,17 @@ while 1:
     a= a+10
 
 
+import binascii
+
+class ParseMethod(object):
+  @staticmethod
+  def parse_default(f, count, offset):
+    pass
+
+  @staticmethod
+  def parse_latitude(f, count, offset):
+    old_pos = f.tell()
+    f.seek(12 + offset)
       
 
       
