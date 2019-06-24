@@ -37,3 +37,20 @@ class ParseMethod(object):
   def parse_latitude(f, count, offset):
     old_pos = f.tell()
     f.seek(12 + offset)
+
+
+    latitude = [0,0,0]
+    for i in xrange(count):
+      byte = f.read(4)
+      numerator = byte.encode('hex')
+
+      byte = f.read(4)
+      denominator = byte.encode('hex')
+
+      latitude[i] = float(int(numerator, 16)) / int(denominator, 16)
+
+
+    print( 'Latitude:\t%.2f %.2f\' %.2f\"' % (latitude[0], latitude[1], latitude[2]))
+    f.seek(old_pos)  
+
+
