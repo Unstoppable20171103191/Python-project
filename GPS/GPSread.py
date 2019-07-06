@@ -1,5 +1,8 @@
 import os
 import exifread
+import re
+import json
+import requests
 
 
 def getExif(path, filename):
@@ -9,9 +12,9 @@ def getExif(path, filename):
     tags = exifread.process_file(fd)
     fd.close()
     # 显示图片所有的exif信息
-    # print("showing res of getExif: \n")
-    # print(tags)
-    # print("\n\n\n\n");
+    print("showing res of getExif: \n")
+    print(tags)
+    print("\n\n\n\n");
     if FIELD in tags:
         print("\nstr(tags[FIELD]): %s" % (str(tags[FIELD])))  # 获取到的结果格式类似为：2018:12:07 03:10:34
         print("\nstr(tags[FIELD]).replace(':', '').replace(' ', '_'): %s" % (
@@ -33,7 +36,7 @@ def getExif(path, filename):
         print('No {} found'.format(FIELD), ' in: ', old_full_file_name)
 
 
-imgpath = "C:\\Users\\LENOVO\\Desktop\\"
+imgpath = "C:\\Users\\LENOVO\\Desktop\\image\\"
 for filename in os.listdir(imgpath):
 
     # os.path.join用于路径拼接，将imgpath和filename连在一起得到完整的路径，后面的参数可有多个，从第一个以”/”开头的参数开始拼接
@@ -45,10 +48,7 @@ for filename in os.listdir(imgpath):
         print(full_file_name)
 
 
-import exifread
-import re
-import json
-import requests
+
 
 def latitude_and_longitude_convert_to_decimal_system(*arg):
     """
