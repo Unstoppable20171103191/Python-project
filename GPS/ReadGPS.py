@@ -1,68 +1,17 @@
-import re
-import exifread
-
-
-def FindGPSimage(filepath):
-
-    GPS = {}
-    date = ""
-    f=open(filepath,'rb')  #字典格式
-    tags=exifread.process_file(f)
-    #print(tags)  #字典可以循环，但是不能获取数据
-    for tag,value in tags.items():
-        #print(tag,value)
-
-        if re.match('GPS GPSLatitudeRef',tag):
-            GPS['GPS GPSLatitudeRef(纬度标识）'] = str(value)
-
-        elif re.match('GPS GPSLongitudeRef',tag):
-            GPS['GPS GPSLongitudeRef(经度标识）'] = str(value)
-
-        elif re.match('GPS GPSAltitudeRef', tag):
-            GPS['GPS GPSAltitudeRef(高度标识）'] = str(value)   #变量转换成字符串
-
-        elif re.match('GPS GPSLatitude',tag):
-            #处理异常
-            try:
-                match_result = re.match('\[(\w*),(\w*),(\w.*)/(\w.*)\]',str(value)).group()
-                GPS['GPSLatitudeRef(纬度)'] = int(match_result[0]),int(match_result[1]),int(match_result[2]/int(match_result[3]))
-
-                #print(match_result)   #提取数据
-            except:
-                GPS['GPSLatitudeRef(纬度)'] = str(value)
-
-        elif re.match('GPS GPSLongitude', tag):
-            # 处理异常
-            try:
-                match_result = re.match('\[(\w*),(\w*),(\w.*)/(\w.*)\]', str(value)).group()
-                GPS['GPSLongitudeRef(纬度)'] = int(match_result[0]), int(match_result[1]), int(
-                    match_result[2] / int(match_result[3]))
-
-                # print(match_result)   #提取数据
-            except:
-                GPS['GPSLongitudeRef(纬度)'] = str(value)
-
-
-        elif re.match('GPS GPSAltitude', tag):
-            GPS['GPSAltitude(高度）'] = str(value)
-
-        elif re.match('Image DateTime ',tag):
-            date = str(value)
-    return{'GPS信息':GPS,'时间信息':date}
-
-if __name__== '__main__':
-    print(FindGPSimage(r'C:\Users\LENOVO\Desktop\image.jpg'))
 import exifread
 import re
 import json
 import requests
 
+
 def latitude_and_longitude_convert_to_decimal_system(*arg):
     """
-    经纬度转为小数, param arg:
+    经纬度转为小数
+    :param arg:
     :return: 十进制小数
     """
     return float(arg[0]) + ((float(arg[1]) + (float(arg[2].split('/')[0]) / float(arg[2].split('/')[-1]) / 60)) / 60)
+
 
 def find_GPS_image(pic_path):
     GPS = {}
@@ -96,29 +45,29 @@ def find_GPS_image(pic_path):
                 date = str(value)
     return {'GPS_information': GPS, 'date_information': date}
 
+
 def find_address_from_GPS(GPS):
     """
     使用Geocoding API把经纬度坐标转换为结构化地址。
     :param GPS:
     :return:
     """
-    secret_key = 'zbLsuDDL4CS2U0M4KezOZZbGUY9iWtVf'
+    secret_key = '7Ofv5hKyGz4c7f6KVUHT5jeQvm3GtLSq'
     if not GPS['GPS_information']:
         return '该照片无GPS信息'
     lat, lng = GPS['GPS_information']['GPSLatitude'], GPS['GPS_information']['GPSLongitude']
     baidu_map_api = "http://api.map.baidu.com/geocoder/v2/?ak={0}&callback=renderReverse&location={1},{2}s&output=json&pois=0".format(
         secret_key, lat, lng)
     response = requests.get(baidu_map_api)
-    content = response.text.replace("renderReverse&&renderReverse(", "")[:-1]
+    content = response.text.replace("renderReverse&&renderReverse", "")[:-1]
     baidu_map_address = json.loads(content)
     formatted_address = baidu_map_address["result"]["formatted_address"]
-    province = baidu_map_address["result"]["addressComponent"]["province"]
-    city = baidu_map_address["result"]["addressComponent"]["city"]
-    district = baidu_map_address["result"]["addressComponent"]["district"]
-    return formatted_address,province,city,district
+    # province = baidu_map_address["result"]["addressComponent"]["province"]
+    # city = baidu_map_address["result"]["addressComponent"]["city"]
+    # district = baidu_map_address["result"]["addressComponent"]["district"]
+    return formatted_address
+
 
 GPS_info = find_GPS_image(pic_path='C:\\Users\\LENOVO\\Desktop\\image.jpg')
 address = find_address_from_GPS(GPS=GPS_info)
 print(address)
-
-#28  + 10/60+125513/10000/3600

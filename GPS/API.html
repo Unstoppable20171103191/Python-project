@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="CSS/base.css">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<style type="text/css">
+	body,
+	html,
+	#allmap {width: 300vh;height: 120vh;overflow: hidden;margin:0;font-family:"微软雅黑";}
+	</style>
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=7Ofv5hKyGz4c7f6KVUHT5jeQvm3GtLSq"></script>
+	<title>API</title>
+</head>
+<body>
+	<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+
+	//储存坐标显示内容变量
+	var InfoText = ""
+
+	//储存信息框大小信息框
+	var opts = {
+				// 信息窗口宽度
+				width : 350,
+				// 信息窗口高度
+				height: 430,
+				// 信息窗口标题
+				title : "Message" ,
+				//设置允许信息窗发送短息
+				enableMessage:true
+			   };
+
+	// 坐标转换API的回调函
+	translateCallback = function (data){
+		// 若返回信息非空
+		if(data.status === 0) {
+			// 在地图上标记坐标点
+			for (var i = 0; i < data.points.length; i++) {
+				//为每一个坐标遍历不同的信息窗口
+				InfoText =
+				"<dir class='Message'>"+
+				//标题信息
+				"<h1>" + PhotoName[i] + "</h1>" +
+				//图片信息
+				"<img style='border-radius: 25px;float:right;id='imgDemo' src='image/"+ PhotoName[i] +"' width='280' height='140' title='" + PhotoName[i] + "'/>"+
+				//坐标信息
+				"</br>经度 ："+ data.points[i].lat + "</br>" +
+				"<p>纬度 ："+ data.points[i].lng + "</p>" +
+				"</dir>"
+				//创建点坐标
+				var marker = new BMap.Marker(data.points[i])
+                //添加坐标点
+				map.addOverlay(marker);
+				//添加点击事件
+				addClickHandler(InfoText,marker);
+				//设置地图中心点
+				map.setCenter(data.points[i]);
+				//设置坐标点跳动
+				marker.setAnimation(BMAP_ANIMATION_BOUNCE);
+			}
+
+			//添加点击事件
+			function addClickHandler(InfoText,marker){
+				//添加点击事件
+				marker.addEventListener("click",function(e){
+					//打开信息框函数
+					openInfo(InfoText,e)}
+				);
+			}
+
+			//打开信息框函数
+			function openInfo(InfoText,e){
+				var p = e.target;
+				//根据点坐标创建新的点
+				var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);
+				// 创建信息窗口对象
+				var infoWindow = new BMap.InfoWindow(InfoText,opts);
+				//开启信息窗口
+				map.openInfoWindow(infoWindow,point);
+			}
+
+			// 创建多边形变量（线）
+			var polyline = new BMap.Polyline(
+			data.points,
+				{strokeColor:"black", strokeWeight:10, strokeOpacity:0.5}
+			)
+			//将线显示在地图上
+			map.addOverlay(polyline);
+		}
+	}
+
+	//储存来自Python读取的照片坐标信息
+	var PhotoMark = new Array(111.78725,40.492618972222225,111.78678194444444,40.491512166666666,111.78522699999999,40.490305972222224,111.77412738888889,40.48882911111111,111.78197197222222,40.49298397222222,111.78330497222223,40.49243797222222,111.78336897222222,40.488874,)
+	//储存来自Python读取的照片名称信息
+	var PhotoName = new Array("001.jpg","002.jpg","003.jpg","004.jpg","007.jpg","006.jpg","005.jpg",)
+	//创建空列表用于储存转化后的坐标信息
+	var PhotoPoint = []
+	//创建Map实例
+	var map = new BMap.Map("allmap");
+	//创建中心点坐标
+	var Center = new BMap.Point(PhotoMark[0],PhotoMark[1]);
+	//通过中心点坐标初始化地图 设置地图大小
+	map.centerAndZoom(Center, 18);
+	//将py文件中读取到的Exif的GPS坐标转换为API的point坐标
+	for (var i=0;i<PhotoMark.length;i+=2){
+		//创建点坐标
+		var marker_point = new BMap.Point(PhotoMark[i],PhotoMark[i+1])
+		//将点坐标放入列表中
+		PhotoPoint.push(marker_point)
+	}
+	//将读取的坐标通过API翻译 并调用回调函数
+	var convertor = new BMap.Convertor();
+	convertor.translate(PhotoPoint,1,5,translateCallback)
+	//添加地图类型控件
+	map.addControl(new BMap.MapTypeControl({
+		mapTypes:[
+            BMAP_NORMAL_MAP,
+            BMAP_HYBRID_MAP
+        ]}));
+    // 设置地图显示的城市
+	map.setCurrentCity("呼和浩特");
+	//开启鼠标滚轮缩放
+	map.enableScrollWheelZoom(true);
+</script>
